@@ -1,23 +1,20 @@
-# define base docker image
-# Wybierz obraz bazowy z Mavenem
-FROM maven:3.8.4-openjdk-17
+# Use the official Python image as the base image
+FROM python:3.9-slim
 
-# Ustaw katalog roboczy w kontenerze
+# Set the working directory to /app
 WORKDIR /app
 
-# Skopiuj pliki aplikacji do kontenera
-COPY src /app/src
-COPY pom.xml /app/pom.xml
+# Copy the requirements file into the container
+COPY requirements.txt .
 
-# Wykonaj polecenie "mvn clean install" w kontenerze
-RUN mvn clean install
+# Install the Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Wykorzystaj obraz bazowy OpenJDK do uruchomienia aplikacji
-FROM openjdk:17
+# Copy the application code into the container
+COPY . .
 
-# Skopiuj skompilowaną aplikację do kontenera
-COPY --from=0 /app/target/hackathonapp-0.0.1-SNAPSHOT.jar hackathonapp-jar
+# Copy the SQLite database file into the container
+COPY example.db .
 
-# Ustaw etykietę i punkt wejścia
-LABEL maintainer="pyrai"
-ENTRYPOINT ["java", "-jar", "hackathonapp-jar"]
+# Set the command to start the FastAPI application
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
