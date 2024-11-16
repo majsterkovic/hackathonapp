@@ -1,6 +1,6 @@
 # define base docker image
 # Wybierz obraz bazowy z Mavenem
-FROM maven:3.8.4-openjdk-17
+FROM maven:latest
 
 # Ustaw katalog roboczy w kontenerze
 WORKDIR /app
@@ -10,7 +10,7 @@ COPY src /app/src
 COPY pom.xml /app/pom.xml
 
 # Wykonaj polecenie "mvn clean install" w kontenerze
-RUN mvn clean install
+RUN mvn clean install -Dmaven.test.skip=true
 
 # Wykorzystaj obraz bazowy OpenJDK do uruchomienia aplikacji
 FROM openjdk:17

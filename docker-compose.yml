@@ -9,8 +9,6 @@ services:
     depends_on:
       - db
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=admin
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/hackaton
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=admin
@@ -21,9 +19,11 @@ services:
       - "8080:8080"
 
   db:
-    image: postgres
+    image: 'postgres:15.4-alpine'
     container_name: db
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=hackaton
+    ports:
+      - "11432:5432"
