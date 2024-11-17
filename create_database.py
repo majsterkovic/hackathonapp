@@ -1,8 +1,10 @@
+import logging
+
 import arxivscraper
 import anthropic
 import pandas as pd
 import os
-from anthropic.types import TextBlock
+import re
 from transformers import AutoTokenizer, AutoModel
 import torch
 import requests
@@ -116,7 +118,16 @@ def execute():
     # limit df to 5 rows
     df['url'] = df['url'].replace('abs', 'pdf', regex=True)
 
-    df = df.head(2)
+    df = df.head(40)
+    df["pdf_text"] = df["url"].apply(_pdf_from_url_to_text)
+    df = df.dropna(subset=["pdf_text"])
+    email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
+
+    df['emails'] = df["pdf_text"].apply(lambda x: re.findall(email_regex, x))
+    df = df[df['emails'].apply(len) > 0]
+
+    logging.info("Done emails")
+    df = df.head(5)
 
     prompt_for_investors = "Please shortly rewrite this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
     prompt_for_business = "Please shortly rewrite this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
@@ -133,14 +144,11 @@ def execute():
     df["abstract_embedding"] = df["abstract"].apply(lambda x: _extract_features(x, tokenizer, model))
 
     # Zastosowanie z DataFrame
-    df["pdf_text"] = df["url"].apply(_pdf_from_url_to_text)
 
     df["pdf_text_embedding"] = df["pdf_text"].apply(lambda x: _extract_features(x, tokenizer, model))
 
-
-
     # Wybierz kolumny
-    df = df[['title', 'abstract', 'investors', 'business', 'pdf_text', 'abstract_embedding', 'pdf_text_embedding', 'authors', 'url']]
+    df = df[['title', 'abstract', 'investors', 'business', 'pdf_text', 'abstract_embedding', 'pdf_text_embedding', 'authors', 'url', 'emails']]
 
     # Konwertuj typy danych
     df = df.astype({
@@ -150,7 +158,8 @@ def execute():
         'business': 'string',
         'pdf_text': 'string',
         'authors': 'string',
-        'url': 'string'
+        'url': 'string',
+        'emails': 'string'
     })
 
     df['abstract_embedding'] = df['abstract_embedding'].apply(lambda x: x.detach().cpu().numpy().tobytes())

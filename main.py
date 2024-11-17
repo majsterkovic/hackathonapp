@@ -56,8 +56,8 @@ async def articles_as_business():
 
         # Odczytanie danych z bazy SQLite
         logging.info("Odczytywanie danych z bazy SQLite...")
-        df = pd.read_sql_query("SELECT business, authors, url FROM my_table", engine)
-        df['keywords'] = df['authors']
+        df = pd.read_sql_query("SELECT business, emails, url FROM my_table", engine)
+        df['keywords'] = df['emails']
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
         return df.to_dict('records')
