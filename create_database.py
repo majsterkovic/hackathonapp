@@ -64,6 +64,37 @@ def _pdf_from_url_to_text(pdf_url):
     return text
 
 
+def _rewrite_abstract(abstract: str, prompt: str) -> str:
+    """
+    Rewrites an academic abstract to be more investor-friendly using Claude AI.
+
+    Args:
+        abstract (str): The academic abstract to rewrite
+
+    Returns:
+        str: The investor-friendly version of the abstract
+    """
+
+    # Initialize Anthropic client
+    client = anthropic.Anthropic(
+        api_key=os.environ.get("ANTHROPIC_API_KEY")
+    )
+
+    # Generate response
+    message = client.messages.create(
+        model="claude-3-haiku-20240307",
+        max_tokens=1024,
+        system="You are a creative writing assistant.",
+        messages=[
+            {"role": "user", "content": f"Hello Claude. {prompt}"},
+            {"role": "user", "content": abstract},
+            {"role": "assistant", "content": "Here is a paraphrased version of the abstract:"}
+        ]
+    )
+
+    return message.content
+
+
 def execute():
     os.environ[
         'ANTHROPIC_API_KEY'] = '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'
@@ -86,6 +117,12 @@ def execute():
     df['url'] = df['url'].replace('abs', 'pdf', regex=True)
 
     df = df.head(2)
+
+    prompt_for_investors = "Please rewrite this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
+    prompt_for_business = "Please rewrite this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
+
+    df["investors"] = df.apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_investors)[0].text, axis=1)
+    df["business"] = df.apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_business)[0].text, axis=1)
 
     # Wczytaj model SciBERT
     model_name = "allenai/scibert_scivocab_uncased"
