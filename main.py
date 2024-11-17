@@ -10,7 +10,6 @@ from pydantic import BaseModel
 import numpy as np
 from sentence_transformers import SentenceTransformer
 from transformers import AutoTokenizer, AutoModel
-from create_database import execute
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -107,8 +106,10 @@ async def compareText(query: Query):
         df['abstract_embedding'] = df['abstract_embedding'].apply(
             lambda x: np.frombuffer(x, dtype=np.float32).reshape(-1)
         )
-
-        query_embedding = extract_features(query.query).detach().cpu().numpy()
+        try:
+            query_embedding = extract_features(query.query).detach().cpu().numpy()
+        except Exception as e:
+            return {"error": " blad 1"}
         # print(query_embedding.shape)
         # print(df['abstract_embedding'][0].shape)
         try:
@@ -199,16 +200,3 @@ def extract_features(text):
     embeddings = outputs.last_hidden_state.mean(dim=1)
 
     return embeddings[0]  # Zwróć wektor dla pierwszego (i jedynego) elementu batcha
-# def extract_features(text):
-#     model_name = "allenai/scibert_scivocab_uncased"
-#
-#     tokenizer = AutoTokenizer.from_pretrained(model_name)
-#     model = AutoModel.from_pretrained(model_name)
-#
-#     input_ids = tokenizer.encode(text, return_tensors="pt")
-#     output = model(input_ids)[0]
-#     return output
-
-@app.get("/create_database")
-async def create_database():
-    execute()
