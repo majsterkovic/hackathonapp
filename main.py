@@ -16,7 +16,7 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -56,8 +56,7 @@ async def articles_as_business():
 
         # Odczytanie danych z bazy SQLite
         logging.info("Odczytywanie danych z bazy SQLite...")
-        df = pd.read_sql_query("SELECT business, authors, url FROM my_table", engine)
-        df['keywords'] = df['authors']
+        df = pd.read_sql_query("SELECT business, emails, url, keywords FROM my_table", engine)
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
         return df.to_dict('records')
@@ -66,7 +65,19 @@ async def articles_as_business():
         logging.error(f"Wystąpił błąd: {e}")
         return {"error": "Wystąpił błąd podczas przetwarzania danych."}
 
+@app.get("/getArticlesAsInvestors")
+async def articles_as_investors():
+    try:
+        engine = create_engine('sqlite:///example.db')
+        logging.info("Pomyślnie połączono z bazą danych SQLite...")
 
-@app.get("/create_database")
-async def create_database():
-    execute()
+        # Odczytanie danych z bazy SQLite
+        logging.info("Odczytywanie danych z bazy SQLite...")
+        df = pd.read_sql_query("SELECT investors, emails, url, keywords FROM my_table", engine)
+        # Zwrócenie danych w formacie JSON
+        logging.info("Zwracanie danych w formacie JSON...")
+        return df.to_dict('records')
+
+    except Exception as e:
+        logging.error(f"Wystąpił błąd: {e}")
+        return {"error": "Wystąpił błąd podczas przetwarzania danych."}
