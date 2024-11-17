@@ -106,16 +106,10 @@ async def compareText(query: Query):
         df['abstract_embedding'] = df['abstract_embedding'].apply(
             lambda x: np.frombuffer(x, dtype=np.float32).reshape(-1)
         )
-        try:
-            query_embedding = extract_features(query.query).detach().cpu().numpy()
-        except Exception as e:
-            return {"error": " blad 1"}
+        query_embedding = extract_features(query.query).detach().cpu().numpy()
         # print(query_embedding.shape)
         # print(df['abstract_embedding'][0].shape)
-        try:
-            similarities = [(item, get_similarities(query_embedding, item)) for _, item in df.iterrows()]
-        except Exception as e:
-            return {"error": "Inny blad"}
+        similarities = [(item, get_similarities(query_embedding, item)) for _, item in df.iterrows()]
         # print(similarities)
         sorted_results = sorted(similarities, key=lambda x: x[1], reverse=True)
         df = pd.DataFrame([sorted_result[0] for sorted_result in sorted_results])
