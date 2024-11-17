@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import logging
 import pandas as pd
 from sqlalchemy import create_engine
+from create_database import execute
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s [%(levelname)s] %(message)s')
@@ -48,14 +49,14 @@ async def get_data():
         return {"error": "Wystąpił błąd podczas przetwarzania danych."}
 
 @app.get("/getArticlesAsBusiness")
-async def articlesAsBusiness():
+async def articles_as_business():
     try:
         engine = create_engine('sqlite:///example.db')
         logging.info("Pomyślnie połączono z bazą danych SQLite...")
 
         # Odczytanie danych z bazy SQLite
         logging.info("Odczytywanie danych z bazy SQLite...")
-        df = pd.read_sql_query("SELECT business  FROM my_table", engine)
+        df = pd.read_sql_query("SELECT business FROM my_table", engine)
 
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
@@ -64,3 +65,8 @@ async def articlesAsBusiness():
     except Exception as e:
         logging.error(f"Wystąpił błąd: {e}")
         return {"error": "Wystąpił błąd podczas przetwarzania danych."}
+
+
+@app.get("/create_database")
+async def create_database():
+    execute()
