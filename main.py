@@ -67,6 +67,7 @@ async def articles_as_business():
         df = pd.read_sql_query("SELECT business, emails, url, keywords FROM my_table", engine)
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
+        df = df.rename(columns={"business": "description"})
         return df.to_dict('records')
 
     except Exception as e:
@@ -84,6 +85,7 @@ async def articles_as_investors():
         df = pd.read_sql_query("SELECT investors, emails, url, keywords FROM my_table", engine)
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
+        df = df.rename(columns={"investors": "description"})
         return df.to_dict('records')
 
     except Exception as e:
@@ -117,6 +119,7 @@ async def compareText(query: Query):
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
         df = df[['business', 'emails', 'url', 'keywords']]
+        df = df.rename(columns={"business": "description"})
         return df.to_dict('records')
         # return None
 
@@ -149,6 +152,7 @@ async def compareText2(query: Query):
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
         df = df[['investors', 'emails', 'url', 'keywords']]
+        df = df.rename(columns={"investors": "description"})
         return df.to_dict('records')
         # return None
 
