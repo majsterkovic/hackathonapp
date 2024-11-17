@@ -15,16 +15,12 @@ COPY requirements.txt .
 # Install the Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN pip install git+https://github.com/LIAAD/yake
 
 # Copy the application code into the container
 COPY . .
 
-# RUN python create_database.py
-
 # Copy the SQLite database file into the container
 COPY example.db .
-
 
 # Set the command to start the FastAPI application
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]

@@ -1,4 +1,4 @@
-import tqdm
+from tqdm import tqdm
 import logging
 
 import arxivscraper
@@ -178,8 +178,9 @@ def execute():
     # limit df to 5 rows
     df['url'] = df['url'].replace('abs', 'pdf', regex=True)
 
-    df = df.head(40)
-    df["pdf_text"] = df["url"].apply(_pdf_from_url_to_text)
+    df = df.head(10)
+    tqdm.pandas(desc="Processing pdf_text")
+    df["pdf_text"] = df["url"].progress_apply(_pdf_from_url_to_text)
     df = df.dropna(subset=["pdf_text"])
     email_regex = r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}'
 
@@ -187,13 +188,16 @@ def execute():
     df = df[df['emails'].apply(len) > 0]
 
     logging.info("Done emails")
-    df = df.head(5)
+    df = df.head(10)
 
     prompt_for_investors = "Please shortly rewrite this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
     prompt_for_business = "Please shortly rewrite this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
 
     tqdm.pandas(desc="Processing business")
     df["business"] = df.progress_apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_business)[0].text, axis=1)
+
+    tqdm.pandas(desc="Processing investors")
+    df["investors"] = df.progress_apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_investors)[0].text, axis=1)
 
     # Wczytaj model SciBERT
     model_name = "allenai/scibert_scivocab_uncased"
@@ -249,6 +253,8 @@ def execute():
         'business': types.String,
         'pdf_text': types.Text,
         'keywords': types.String,
+        'authors': types.String,
+        'emails': types.String,
         'abstract_embedding': types.LargeBinary,
         'pdf_text_embedding': types.LargeBinary
     }
