@@ -93,30 +93,64 @@ class Query(BaseModel):
     query: str
 
 
-@app.post("/compareText/")
+@app.post("/getArticlesAsBusiness")
 async def compareText(query: Query):
     try:
+
         engine = create_engine('sqlite:///example.db')
         logging.info("Superowo połączono z bazą danych SQLite...")
 
         logging.info("Odczytywanie danych z bazy SQLite...")
-        df = pd.read_sql_query("SELECT abstract, abstract_embedding FROM my_table", engine)
+        df = pd.read_sql_query("SELECT business, emails, url, keywords, abstract_embedding FROM my_table", engine)
         df['abstract_embedding'] = df['abstract_embedding'].apply(
             lambda x: np.frombuffer(x, dtype=np.float32).reshape(-1)
         )
 
         query_embedding = extract_features(query.query).detach().cpu().numpy()
-        print(query_embedding.shape)
-        print(df['abstract_embedding'][0].shape)
+        # print(query_embedding.shape)
+        # print(df['abstract_embedding'][0].shape)
 
-        similarities = [(item, get_similarities(query_embedding, item)) for item in df['abstract_embedding']]
-
-        print(similarities)
+        similarities = [(item, get_similarities(query_embedding, item)) for _, item in df.iterrows()]
+        # print(similarities)
         sorted_results = sorted(similarities, key=lambda x: x[1], reverse=True)
-        print(sorted_results)
+        df = pd.DataFrame([sorted_result[0] for sorted_result in sorted_results])
         # Zwrócenie danych w formacie JSON
         logging.info("Zwracanie danych w formacie JSON...")
-        return None
+        df = df[['business', 'emails', 'url', 'keywords']]
+        return df.to_dict('records')
+        # return None
+
+    except Exception as e:
+        logging.error(f"Wystąpił błąd: {e}")
+        return {"error": "Wystąpił błąd w czasie przetwarzania danych."}
+
+
+@app.post("/getArticlesAsInvestors")
+async def compareText2(query: Query):
+    try:
+
+        engine = create_engine('sqlite:///example.db')
+        logging.info("Superowo połączono z bazą danych SQLite...")
+
+        logging.info("Odczytywanie danych z bazy SQLite...")
+        df = pd.read_sql_query("SELECT investors, emails, url, keywords, abstract_embedding FROM my_table", engine)
+        df['abstract_embedding'] = df['abstract_embedding'].apply(
+            lambda x: np.frombuffer(x, dtype=np.float32).reshape(-1)
+        )
+
+        query_embedding = extract_features(query.query).detach().cpu().numpy()
+        # print(query_embedding.shape)
+        # print(df['abstract_embedding'][0].shape)
+
+        similarities = [(item, get_similarities(query_embedding, item)) for _, item in df.iterrows()]
+        # print(similarities)
+        sorted_results = sorted(similarities, key=lambda x: x[1], reverse=True)
+        df = pd.DataFrame([sorted_result[0] for sorted_result in sorted_results])
+        # Zwrócenie danych w formacie JSON
+        logging.info("Zwracanie danych w formacie JSON...")
+        df = df[['investors', 'emails', 'url', 'keywords']]
+        return df.to_dict('records')
+        # return None
 
     except Exception as e:
         logging.error(f"Wystąpił błąd: {e}")
@@ -125,15 +159,16 @@ async def compareText(query: Query):
 model_sim = SentenceTransformer("all-MiniLM-L6-v2")
 
 def get_similarities(e1, e2):
-    print(e2)
-    e1 = np.mean(e1, axis=1)
-    print(e1.shape)
-    print()
-    print(e2.shape)
+    # print(e2)
+    # logging.info(e2.shape)
+    # e1 = np.mean(e1, axis=1)
+    # print(e1.shape)
+    # print()
+    # print(e2.shape)
     # if e1.ndim == 1:
     e1 = e1.reshape(1, -1)
     # if e2.ndim == 1:
-    e2 = e2.reshape(1, -1)
+    e2 = e2['abstract_embedding'].reshape(1, -1)
     similarities = model_sim.similarity(e2, e1)
     return similarities
 
@@ -167,3 +202,7 @@ def extract_features(text):
 #     input_ids = tokenizer.encode(text, return_tensors="pt")
 #     output = model(input_ids)[0]
 #     return output
+
+@app.get("/create_database")
+async def create_database():
+    execute()
