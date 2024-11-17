@@ -118,8 +118,8 @@ def execute():
 
     df = df.head(2)
 
-    prompt_for_investors = "Please rewrite this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
-    prompt_for_business = "Please rewrite this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
+    prompt_for_investors = "Please shortly rewrite this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
+    prompt_for_business = "Please shortly rewrite this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
 
     df["investors"] = df.apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_investors)[0].text, axis=1)
     df["business"] = df.apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_business)[0].text, axis=1)
@@ -137,8 +137,10 @@ def execute():
 
     df["pdf_text_embedding"] = df["pdf_text"].apply(lambda x: _extract_features(x, tokenizer, model))
 
+
+
     # Wybierz kolumny
-    df = df[['title', 'abstract', 'investors', 'business', 'pdf_text', 'abstract_embedding', 'pdf_text_embedding']]
+    df = df[['title', 'abstract', 'investors', 'business', 'pdf_text', 'abstract_embedding', 'pdf_text_embedding', 'authors', 'url']]
 
     # Konwertuj typy danych
     df = df.astype({
@@ -146,7 +148,9 @@ def execute():
         'abstract': 'string',
         'investors': 'string',
         'business': 'string',
-        'pdf_text': 'string'
+        'pdf_text': 'string',
+        'authors': 'string',
+        'url': 'string'
     })
 
     df['abstract_embedding'] = df['abstract_embedding'].apply(lambda x: x.detach().cpu().numpy().tobytes())
