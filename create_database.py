@@ -125,9 +125,9 @@ def _rewrite_abstract(abstract: str, prompt: str) -> str:
 
     # Generate response
     message = client.messages.create(
-        model="claude-3-haiku-20240307",
+        model="claude-3-5-sonnet-20241022",
         max_tokens=1024,
-        system="You are a creative writing assistant.",
+        system="You are a shortly writing assistant.",
         messages=[
             {"role": "user", "content": f"Hello Claude. {prompt}"},
             {"role": "user", "content": abstract},
@@ -190,8 +190,8 @@ def execute():
     logging.info("Done emails")
     df = df.head(10)
 
-    prompt_for_investors = "Please shortly rewrite this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
-    prompt_for_business = "Please shortly rewrite this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
+    prompt_for_investors = "Rewrite in 1 sentence this abstract in a way that highlights the potential business opportunities and market impact of the described approach."
+    prompt_for_business = "Rewrite in 1 sentence this abstract to emphasize the practical applications, product development potential, and competitive advantages of the described technical approach."
 
     tqdm.pandas(desc="Processing business")
     df["business"] = df.progress_apply(lambda x: _rewrite_abstract(x['abstract'], prompt_for_business)[0].text, axis=1)
